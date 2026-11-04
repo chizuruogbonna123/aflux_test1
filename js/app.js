@@ -276,79 +276,69 @@ function home() {
   <section class="section" id="terms"><div class="wrap page"><h2>Terms</h2><p>This is sample terms text for this prototype. Review the terms for orders, pricing, delivery and returns before launch.</p></div></section>`;
 }
 
-const F = {
-  cat: "all",
-  size: "",
-  color: "",
-  max: 200000,
-  sort: "featured",
-  shown: 8,
-  q: "",
+const CAT_INTRO = {
+  tees: "Heavyweight cotton, cut with a quiet, boxy ease.",
+  streetwear: "Elevated layers, built for the everyday.",
+  signature: "Structured pieces that define the season.",
+  essentials: "The foundations. Made to be worn on repeat.",
 };
-function shop(q) {
-  F.cat = q.get("cat") || "all";
-  F.sort = q.get("sort") || "featured";
-  F.q = q.get("q") || "";
-  F.size = "";
-  F.color = "";
-  F.max = 200000;
-  F.shown = 8;
-  const colors = [
-    ...new Map(
-      PRODUCTS.flatMap((p) => p.colors).map((c) => [c.name, c]),
-    ).values(),
-  ];
-  const title = F.q
-    ? `Results for “${esc(F.q)}”`
-    : F.cat === "all"
-      ? "Shop all"
-      : CATEGORIES[F.cat];
-  app.innerHTML = `<div class="wrap"><div class="shop"><aside class="filters" aria-label="Filters"><fieldset><legend>Category</legend>
-  ${[["all", "All"], ...Object.entries(CATEGORIES)].map(([k, v]) => `<label><input type="radio" name="cat" value="${k}" ${k === F.cat ? "checked" : ""}> ${v}</label>`).join("")}</fieldset>
-  <fieldset><legend>Size</legend><label><input type="radio" name="size" value="" checked> Any</label>${SIZES.map((s) => `<label><input type="radio" name="size" value="${s}"> ${s}</label>`).join("")}</fieldset>
-  <fieldset><legend>Colour</legend><label><input type="radio" name="color" value="" checked> Any</label>${colors.map((c) => `<label><input type="radio" name="color" value="${c.name}"> ${c.name}</label>`).join("")}</fieldset>
-  <fieldset><legend>Max price: <span id="maxLabel">${money(F.max)}</span></legend><input type="range" name="max" min="20000" max="200000" step="5000" value="${F.max}" style="width:100%" aria-label="Maximum price"></fieldset></aside>
-  <section><h1 style="font-size:2.4rem">${title}</h1><div class="bar"><span id="resultCount" role="status"></span><label>Sort <select name="sort">${[
-    ["featured", "Featured"],
-    ["newest", "Newest"],
-    ["popular", "Most popular"],
-    ["low", "Price: low to high"],
-    ["high", "Price: high to low"],
-  ]
-    .map(
-      ([v, l]) =>
-        `<option value="${v}" ${v === F.sort ? "selected" : ""}>${l}</option>`,
-    )
-    .join("")}</select></label></div>
-  <div class="grid g3" id="grid"></div><p style="text-align:center;margin-top:2rem"><button class="btn ghost" id="more" hidden>LOAD MORE</button></p></section></div></div>`;
-  app.querySelector(".filters").addEventListener("input", onFilter);
-  app.querySelector("[name=sort]").addEventListener("change", onFilter);
-  $("#more").onclick = () => {
-    F.shown += 8;
-    paint();
-  };
+const SORTS = [["featured", "Featured"], ["newest", "Newest"], ["popular", "Most popular"], ["low", "Price: low to high"], ["high", "Price: high to low"]];
+const F = { mode: "shop", cat: "all", size: "", color: "", max: 200000, sort: "featured", shown: 8, q: "" };
+
+function collections() {
+  const tiles = Object.entries(CATEGORIES).map(([k, label]) => {
+    const ps = PRODUCTS.filter((p) => p.cat === k);
+    return `<a class="ctile" href="#/shop?cat=${k}"><div class="cimg">${ps[0] ? media(ps[0]) : ""}</div><div class="ctext"><span>${ps.length} ${ps.length === 1 ? "piece" : "pieces"}</span><h2>${label}</h2><em>Discover</em></div></a>`;
+  }).join("");
+  app.innerHTML = `<section class="phead"><div class="wrap"><p class="eyebrow">AFLUX</p><h1>Collections</h1><p class="intro">Four chapters of considered everyday dressing. Choose one to begin.</p></div></section>
+  <div class="wrap"><div class="cgrid">${tiles}</div></div>`;
+}
+
+function shop(q, mode = "shop") {
+  Object.assign(F, { mode, cat: mode === "shop" ? q.get("cat") || "all" : "all", sort: mode === "new" ? "newest" : q.get("sort") || "featured", q: q.get("q") || "", size: "", color: "", max: 200000, shown: 8 });
+  const head = F.q ? ["Search", `Results for “${esc(F.q)}”`, ""]
+    : mode === "new" ? ["Just in", "New arrivals", "The latest pieces from the AFLUX studio."]
+    : F.cat !== "all" ? ["Collection", CATEGORIES[F.cat] || "Shop", CAT_INTRO[F.cat] || ""]
+    : ["The store", "Shop all", "Everything AFLUX, in one place."];
+  const tabs = [["all", "All"], ...Object.entries(CATEGORIES)].map(([k, l]) =>
+    `<a href="#/shop${k === "all" ? "" : "?cat=" + k}" class="${mode === "shop" && !F.q && k === F.cat ? "on" : ""}">${l}</a>`).join("");
+  app.innerHTML = `<section class="phead"><div class="wrap"><p class="eyebrow">${head[0]}</p><h1>${head[1]}</h1>${head[2] ? `<p class="intro">${head[2]}</p>` : ""}</div></section>
+  <div class="tbar"><div class="wrap tbar-in"><nav class="tabs" aria-label="Categories">${tabs}</nav><div class="tbar-r"><span id="resultCount" role="status"></span><button class="fbtn" id="openFilters">Sort &amp; filter</button></div></div></div>
+  <div class="wrap"><div class="grid g4 pgrid" id="grid"></div><div class="more"><p id="shownInfo"></p><button class="btn ghost" id="more" hidden>SHOW MORE</button></div></div>`;
+  filterPanel();
+  $("#openFilters").onclick = () => $("#filterDlg").showModal();
+  $("#more").onclick = () => { F.shown += 8; paint(); };
   paint();
+}
+
+function filterPanel() {
+  if (!$("#filterDlg")) {
+    document.body.insertAdjacentHTML("beforeend", `<dialog id="filterDlg" aria-label="Sort and filter"></dialog>`);
+    const d = $("#filterDlg");
+    d.addEventListener("input", onFilter);
+    d.addEventListener("click", (e) => {
+      if (e.target.closest("#fClose,#fDone")) d.close();
+      if (e.target.closest("#fClear")) { Object.assign(F, { size: "", color: "", max: 200000, sort: "featured", shown: 8 }); filterPanel(); paint(); }
+    });
+  }
+  const colors = [...new Map(PRODUCTS.flatMap((p) => p.colors).map((c) => [c.name, c])).values()];
+  const chip = (name, value, label, on) => `<label class="chip"><input type="radio" name="${name}" value="${esc(value)}" ${on ? "checked" : ""}><span>${label}</span></label>`;
+  $("#filterDlg").innerHTML = `<div class="fh"><h2>Sort &amp; filter</h2><button id="fClose" aria-label="Close">×</button></div><div class="fb">
+  <fieldset><legend>Sort by</legend><div class="chips">${SORTS.map(([v, l]) => chip("sort", v, l, v === F.sort)).join("")}</div></fieldset>
+  <fieldset><legend>Size</legend><div class="chips">${chip("size", "", "Any", !F.size)}${SIZES.map((s) => chip("size", s, s, s === F.size)).join("")}</div></fieldset>
+  <fieldset><legend>Colour</legend><div class="chips">${chip("color", "", "Any", !F.color)}${colors.map((c) => chip("color", c.name, `<i style="background:${c.hex}"></i>${esc(c.name)}`, c.name === F.color)).join("")}</div></fieldset>
+  <fieldset><legend>Maximum price <span id="maxLabel">${money(F.max)}</span></legend><input type="range" name="max" min="20000" max="200000" step="5000" value="${F.max}" style="width:100%;margin-top:.8rem" aria-label="Maximum price"></fieldset></div>
+  <div class="ff"><button class="link" id="fClear">Clear all</button><button class="btn" id="fDone">VIEW <span id="fCount"></span> PIECES</button></div>`;
 }
 function onFilter(e) {
   const { name, value } = e.target;
-  if (!(name in F)) return;
+  if (!["sort", "size", "color", "max"].includes(name)) return;
   F[name] = name === "max" ? +value : value;
   F.shown = 8;
   if (name === "max") $("#maxLabel").textContent = money(F.max);
   paint();
 }
 function paint() {
-  let list = PRODUCTS.filter(
-    (p) =>
-      (F.cat === "all" || p.cat === F.cat) &&
-      (!F.size || p.sizes.includes(F.size)) &&
-      (!F.color || p.colors.some((c) => c.name === F.color)) &&
-      priceOf(p) <= F.max &&
-      (!F.q ||
-        (p.name + p.desc + CATEGORIES[p.cat])
-          .toLowerCase()
-          .includes(F.q.toLowerCase())),
-  );
   const sorts = {
     newest: (a, b) => b.date.localeCompare(a.date),
     popular: (a, b) => b.pop - a.pop,
@@ -356,12 +346,22 @@ function paint() {
     high: (a, b) => priceOf(b) - priceOf(a),
     featured: () => 0,
   };
+  const list = PRODUCTS.filter((p) =>
+    (F.cat === "all" || p.cat === F.cat) && (!F.size || p.sizes.includes(F.size)) &&
+    (!F.color || p.colors.some((c) => c.name === F.color)) && priceOf(p) <= F.max &&
+    (!F.q || (p.name + p.desc + CATEGORIES[p.cat]).toLowerCase().includes(F.q.toLowerCase())));
   list.sort(sorts[F.sort]);
-  $("#resultCount").textContent =
-    `${list.length} ${list.length === 1 ? "product" : "products"}`;
-  $("#grid").innerHTML = list.length
-    ? list.slice(0, F.shown).map(card).join("")
-    : `<div class="empty"><h2>No matches.</h2><p style="margin-inline:auto">Try a different size, colour or a higher price limit.</p><a class="btn ghost" href="#/shop">CLEAR FILTERS</a></div>`;
+  const shown = list.slice(0, F.shown);
+  const newIds = [...PRODUCTS].sort(sorts.newest).slice(0, 8).map((p) => p.id);
+  $("#resultCount").textContent = `${list.length} ${list.length === 1 ? "piece" : "pieces"}`;
+  if ($("#fCount")) $("#fCount").textContent = list.length;
+  $("#grid").innerHTML = shown.length ? shown.map(card).join("")
+    : `<div class="empty"><h2>No pieces match.</h2><p style="margin-inline:auto">Try different filters.</p><button class="btn ghost" onclick="document.getElementById('openFilters').click()">ADJUST FILTERS</button></div>`;
+  if (F.mode === "new") shown.forEach((p) => {
+    const el = newIds.includes(p.id) && $(`#grid [href="#/product/${p.id}"] .img`);
+    if (el) el.insertAdjacentHTML("beforeend", '<span class="badge">New</span>');
+  });
+  $("#shownInfo").textContent = list.length ? `Showing ${shown.length} of ${list.length}` : "";
   $("#more").hidden = list.length <= F.shown;
 }
 
@@ -861,6 +861,8 @@ async function route() {
     app.innerHTML = home();
     withNews = true;
   } else if (r === "shop") shop(q);
+    else if (r === "collections") collections();
+  else if (r === "new") shop(q, "new");
   else if (r === "search") {
     q.set("q", q.get("q") || "");
     shop(q);
