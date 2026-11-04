@@ -1,3 +1,5 @@
+
+
 // Local product data. Replace with a database/API call later (see loadProducts in app.js).
 // Add real photos by setting images: ["images/name-1.jpg", ...] on a product.
 const SIZES = ["S", "M", "L", "XL"];
@@ -35,9 +37,9 @@ const PRODUCTS = [
     ],
 
     images: [
-      "images/core-heavyweight-tee-ink.png",
-      "images/core-heavyweight-tee-bone.png",
-      "images/core-heavyweight-tee-sand.png",
+      "images/Core-Heavyweight-Tee-ink.png",
+      "images/Core-Heavyweight-Tee-bone.png",
+      "images/Core-Heavyweight-Tee-sand.png",
     ],
     care: "Machine wash cold, inside out. Dry flat. Warm iron.",
   },
@@ -55,8 +57,8 @@ const PRODUCTS = [
     details: ["100% cotton jersey", "Regular fit", "Reinforced shoulder seam"],
 
     images: [
-      "images/line-pocket-tee-olive.png",
-      "images/line-pocket-tee-sand.png",
+      "images/Line-Pocket-Tee-olive.png",
+      "images/Line-Pocket-Tee-sand.png",
     ],
 
     care: "Machine wash cold. Do not tumble dry.",
@@ -98,8 +100,8 @@ const PRODUCTS = [
     details: ["Cotton-blend fleece", "Relaxed fit", "Tonal embroidery"],
 
     images: [
-      "images/arc-crewneck-clay.png",
-      "images/arc-crewneck-ink.png",
+      "images/Arc-Crewneck-clay.png",
+      "images/Arc-Crewneck-ink.png",
     ],
 
     care: "Machine wash cold. Dry flat.",
@@ -164,9 +166,9 @@ const PRODUCTS = [
     ],
 
     images: [
-      "images/form-wide-trouser-sand.png",
-      "images/form-wide-trouser-ink.png",
-      "images/form-wide-trouser-olive.png",
+      "images/Form-Wide-Trouser-sand.png",
+      "images/Form-Wide-Trouser-ink.png",
+      "images/Form-Wide-Trouser-olive.png",
     ],
     
     care: "Machine wash cold. Warm iron.",
@@ -184,8 +186,8 @@ const PRODUCTS = [
     details: ["100% cotton poplin", "Relaxed fit", "Two side pockets"],
 
     images: [
-      "images/base-everyday-short-bone.png",
-      "images/base-everyday-short-clay.png",
+      "images/Base-Everyday-Short-bone.png",
+      "images/Base-Everyday-Short-clay.png",
     ],
     care: "Machine wash cold. Warm iron.",
   },
@@ -215,8 +217,8 @@ const PRODUCTS = [
     details: ["Cotton-poly knit", "Tapered fit", "Zip pocket"],
 
     images: [
-      "images/pace-tapered-jogger-slate.png",
-      "images/pace-tapered-jogger-ink.png",
+      "images/pace-Tapered-jogger-slate.png",
+      "images/pace-Tapered-jogger-ink.png",
     ],
     
     care: "Machine wash cold. Do not bleach.",
