@@ -37,8 +37,8 @@ const PRODUCTS = [
     ],
 
     images: [
-      "images/Core-Heavyweight-Tee-ink.png",
       "images/Core-Heavyweight-Tee-bone.png",
+      "images/Core-Heavyweight-Tee-ink.png",
       "images/Core-Heavyweight-Tee-sand.png",
     ],
     care: "Machine wash cold, inside out. Dry flat. Warm iron.",
