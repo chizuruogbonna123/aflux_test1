@@ -268,7 +268,7 @@ function home() {
   <section class="section" id="shop"><div class="wrap"><div class="head"><h2>Shop all</h2></div><div class="grid g4">${PRODUCTS.map(card).join("")}</div></div></section>
   <section class="section" id="new-arrivals"><div class="wrap"><div class="head"><h2>New arrivals</h2><a class="link" href="#shop">Explore best sellers</a></div><div class="grid g4">${newest.map(card).join("")}</div></div></section>
   <section class="statement section" id="about"><div class="wrap"><div><span class="tag">${esc(S("about", "tag", "OUR APPROACH"))}</span><h2>${esc(S("about", "title", "Made slowly, worn for years."))}</h2></div><div><p>${esc(S("about", "body1", "AFLUX is a contemporary fashion label built around refined streetwear and everyday essentials. We design a small number of pieces each season, in heavyweight fabrics and quiet colours, and we make them to last."))}</p><p>${esc(S("about", "body2", "Our studio is in Lagos. Quiet colours, considered proportions, and nothing that dates by next season."))}</p></div></div></section>
-  <section class="campaign section"><div class="wrap"><div>${art(byId("drift-hoodie") || PRODUCTS[0], "#4A525A").replace(/<rect[^>]*>/, "")}</div><div><h2>The Autumn Edit is here.</h2><p>Heavy fleece, wide trousers and structured outerwear in an earthy, muted palette.</p><a class="btn" href="#new-arrivals">EXPLORE NEW ARRIVALS</a></div></div></section>
+  <section class="banner"><img src="images/campaign.jpg" alt="The Autumn Edit" loading="lazy" onerror="this.onerror=null;this.src='images/hero.jpg'"><div class="banner-text"><p class="eyebrow">New collection</p><h2>The Autumn Edit</h2><div class="banner-links"><a href="#new-arrivals">Shop new arrivals</a><a href="#/shop">Shop the collection</a></div></div></section>
   <section class="section" id="contact"><div class="wrap two"><div><span class="tag">WE ARE HERE TO HELP</span><h2>Get in touch.</h2><p>Questions about a piece or an order? Send us a note and our Lagos team will be happy to help.</p><p><a class="link" href="mailto:hello@aflux.example">hello@aflux.example</a><br>Lekki Phase 1, Lagos</p></div>
   <form data-form="Contact" novalidate><div class="field"><label for="home-contact-name">Name</label><input id="home-contact-name" name="name" required><span class="err" data-for="name"></span></div><div class="field"><label for="home-contact-email">Email</label><input id="home-contact-email" name="email" type="email" required><span class="err" data-for="email"></span></div><div class="field"><label for="home-contact-message">Message</label><textarea id="home-contact-message" name="message" rows="5" required></textarea><span class="err" data-for="message"></span></div><button class="btn">SEND MESSAGE</button><p class="err" role="status" data-msg></p></form></div></section>
   <section class="section" id="shipping"><div class="wrap page"><h2>Shipping and returns</h2><p><strong>Delivery.</strong> Standard (3–5 working days) is ${SETTINGS.freeOver > 0 ? `free over ${ngn(SETTINGS.freeOver)}, otherwise ` : ""}${ngn(SETTINGS.standard)}. Express (1–2 working days) is ${ngn(SETTINGS.express)}.</p><p><strong>Returns.</strong> Return unworn items with tags within 14 days for a refund or exchange. These policies are sample text for this prototype.</p></div></section>
@@ -512,6 +512,7 @@ const form = (kind, fields, btn, extra = "") =>
   `<div class="wrap page"><h1>${kind}</h1>${extra}<form data-form="${kind}" novalidate style="max-width:420px">${fields.map(([n, l, t]) => `<div class="field"><label for="${n}">${l}</label>${t === "textarea" ? `<textarea id="${n}" name="${n}" rows="5" required></textarea>` : `<input id="${n}" name="${n}" type="${t}" required>`}<span class="err" data-for="${n}"></span></div>`).join("")}<button class="btn">${btn}</button><p class="err" role="status" data-msg></p></form></div>`;
 
 /* ---------- Account ---------- */
+  document.body.classList.remove("authpage");
 async function account(q = new URLSearchParams()) {
   const {
     data: { session },
@@ -534,51 +535,108 @@ async function account(q = new URLSearchParams()) {
     account();
   };
 }
+/* ---------- Sign-in page ---------- */
+let resetShown = false;
+const AI = {
+  mail: '<path d="M3 6h18v12H3zM3 7l9 7 9-7"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c.6-4.2 3.8-7 8-7s7.4 2.8 8 7"/>',
+  eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+};
+const aico = (k) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AI[k]}</svg>`;
+const afield = (id, ph, type, ac, icon, eye) =>
+  `<label class="af"><span class="ai">${aico(icon)}</span><input id="${id}" type="${type}" placeholder="${ph}" autocomplete="${ac}" aria-label="${ph}" required>${eye ? `<button type="button" class="aeye" data-eye="${id}" aria-label="Show password">${aico("eye")}</button>` : ""}</label>`;
+function authShell(title, body, foot = "") {
+  document.body.classList.add("authpage");
+  app.innerHTML = `<div class="authwrap" style="background-image:url(images/login.jpg),url(images/hero.jpg)">
+  <div class="auth-top"><a class="auth-logo" href="#/">AFLUX</a><a class="auth-cont" href="#/shop">Continue shopping →</a></div>
+  <div class="auth-hero"><p class="auth-kicker">Welcome to AFLUX</p><h1 id="authTitle">${title}</h1><p>Exclusive drops. Premium quality.<br>A community that moves different.</p>${foot}</div>
+  <section class="auth-card" aria-label="Account"><div class="auth-brand">AFLUX<small>Account</small></div>${body}
+  <p class="auth-terms">By continuing, you agree to our <a href="#/terms">Terms</a> and <a href="#/privacy">Privacy Policy</a>.</p></section></div>`;
+  $(".auth-card").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-eye]");
+    if (!b) return;
+    const i = $("#" + b.dataset.eye), show = i.type === "password";
+    i.type = show ? "text" : "password";
+    b.setAttribute("aria-label", show ? "Hide password" : "Show password");
+  });
+  scrollTo(0, 0);
+}
 function accountForms(next = "") {
-  const f = (id, label, type, ac) =>
-    `<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type}" autocomplete="${ac}" required></div>`;
-  app.innerHTML = `<div class="wrap auth"><form id="signin" novalidate><h1 style="font-size:2rem">Sign in</h1>${f("si-email", "Email", "email", "username")}${f("si-pass", "Password", "password", "current-password")}<button class="btn">SIGN IN</button><p class="err" role="alert" data-msg></p></form>
-  <form id="signup" novalidate><h1 style="font-size:2rem">Create account</h1>${f("su-name", "Full name", "text", "name")}${f("su-email", "Email", "email", "email")}${f("su-pass", "Password (8+ characters)", "password", "new-password")}<button class="btn ghost">CREATE ACCOUNT</button><p class="err" role="alert" data-msg></p></form></div>`;
-  const say = (fm, text, ok) => {
-    const m = fm.querySelector("[data-msg]");
-    m.className = ok ? "ok" : "err";
-    m.textContent = text;
+  authShell("Sign in.<br>Step into more.", `
+  <div class="auth-tabs" role="tablist"><button type="button" role="tab" id="tabIn" aria-selected="true">Sign in</button><button type="button" role="tab" id="tabUp" aria-selected="false">Create account</button></div>
+  <form id="signin" novalidate>${afield("si-email", "Email address", "email", "username", "mail")}${afield("si-pass", "Password", "password", "current-password", "lock", true)}
+  <div class="auth-row"><button type="button" class="alink" id="toForgot">Forgot password?</button></div><button class="abtn">Sign in →</button><p class="amsg" role="alert" data-msg></p></form>
+  <form id="signup" novalidate hidden>${afield("su-name", "Full name", "text", "name", "user")}${afield("su-email", "Email address", "email", "email", "mail")}${afield("su-pass", "Password (8+ characters)", "password", "new-password", "lock", true)}
+  <button class="abtn">Create account →</button><p class="amsg" role="alert" data-msg></p></form>
+  <form id="forgot" novalidate hidden><p class="auth-note">Enter your email and we’ll send you a link to choose a new password.</p>${afield("fp-email", "Email address", "email", "email", "mail")}
+  <button class="abtn">Send reset link</button><p class="amsg" role="status" data-msg></p><div class="auth-row"><button type="button" class="alink" id="backIn">Back to sign in</button></div></form>`,
+  `<p class="auth-new"><span>New here?</span> <button type="button" id="toSignup">Create an account →</button></p>`);
+
+  const forms = { in: $("#signin"), up: $("#signup"), fp: $("#forgot") };
+  const titles = { in: "Sign in.<br>Step into more.", up: "Join AFLUX.<br>Step into more.", fp: "Forgot it?<br>We’ve got you." };
+  const go = (k) => {
+    Object.entries(forms).forEach(([n, f]) => (f.hidden = n !== k));
+    $("#tabIn").setAttribute("aria-selected", k !== "up");
+    $("#tabUp").setAttribute("aria-selected", k === "up");
+    $("#authTitle").innerHTML = titles[k];
   };
-  $("#signin").onsubmit = async (e) => {
+  $("#tabIn").onclick = $("#backIn").onclick = () => go("in");
+  $("#tabUp").onclick = $("#toSignup").onclick = () => go("up");
+  $("#toForgot").onclick = () => go("fp");
+  const say = (fm, text, ok) => { const m = fm.querySelector("[data-msg]"); m.className = "amsg " + (ok ? "ok" : "err"); m.textContent = text; };
+  const busy = (fm, on) => { fm.querySelector(".abtn").disabled = on; };
+
+  forms.in.onsubmit = async (e) => {
     e.preventDefault();
-    const { error } = await db.auth.signInWithPassword({
-      email: $("#si-email").value.trim(),
-      password: $("#si-pass").value,
-    });
-    if (error)
-      return say(
-        e.target,
-        /confirm/i.test(error.message)
-          ? "Please confirm your email first. Check your inbox."
-          : "Wrong email or password.",
-      );
+    busy(e.target, true);
+    const { error } = await db.auth.signInWithPassword({ email: $("#si-email").value.trim(), password: $("#si-pass").value });
+    busy(e.target, false);
+    if (error) return say(e.target, /confirm/i.test(error.message) ? "Please confirm your email first. Check your inbox." : "Wrong email or password.");
     if (next === "admin") location.hash = "#/admin";
     else account();
   };
-  $("#signup").onsubmit = async (e) => {
+  forms.up.onsubmit = async (e) => {
     e.preventDefault();
-    const name = $("#su-name").value.trim(),
-      email = $("#su-email").value.trim(),
-      password = $("#su-pass").value;
-    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      return say(e.target, "Enter your name and a valid email.");
-    if (password.length < 8)
-      return say(e.target, "Use at least 8 characters for your password.");
-    const { data, error } = await db.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    });
+    const name = $("#su-name").value.trim(), email = $("#su-email").value.trim(), password = $("#su-pass").value;
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say(e.target, "Enter your name and a valid email.");
+    if (password.length < 8) return say(e.target, "Use at least 8 characters for your password.");
+    busy(e.target, true);
+    const { data, error } = await db.auth.signUp({ email, password, options: { data: { name } } });
+    busy(e.target, false);
     if (error) return say(e.target, error.message);
     if (data.session) return account();
     say(e.target, "Check your email to confirm your account, then sign in.", true);
   };
+  forms.fp.onsubmit = async (e) => {
+    e.preventDefault();
+    const email = $("#fp-email").value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say(e.target, "Enter a valid email address.");
+    busy(e.target, true);
+    const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    busy(e.target, false);
+    say(e.target, error ? "We couldn’t send the email. Please try again in a few minutes." : "If that email has an account, a reset link is on its way.", !error);
+  };
 }
+function resetPasswordForm() {
+  resetShown = true;
+  authShell("Choose a<br>new password.", `<form id="reset" novalidate>${afield("rp-pass", "New password (8+ characters)", "password", "new-password", "lock", true)}<button class="abtn">Update password</button><p class="amsg" role="alert" data-msg></p></form>`);
+  $("#reset").onsubmit = async (e) => {
+    e.preventDefault();
+    const password = $("#rp-pass").value, m = e.target.querySelector("[data-msg]");
+    m.className = "amsg err";
+    if (password.length < 8) { m.textContent = "Use at least 8 characters."; return; }
+    const { error } = await db.auth.updateUser({ password });
+    if (error) { m.textContent = error.message; return; }
+    resetShown = false;
+    history.replaceState(null, "", location.pathname + "#/account");
+    account();
+  };
+}
+db.auth.onAuthStateChange((event) => {
+  if (event === "PASSWORD_RECOVERY")
+    setTimeout(() => { history.replaceState(null, "", location.pathname + "#/account"); resetPasswordForm(); }, 0);
+});
 function notFound() {
   app.innerHTML = `<div class="wrap page"><h1>Page not found.</h1><p>The page you’re looking for has moved or doesn’t exist.</p><a class="btn" href="#/shop">BACK TO THE SHOP</a></div>`;
 }
@@ -830,7 +888,12 @@ db.auth.onAuthStateChange((event, session) => {
 
 /* ---------- Router and chrome ---------- */
 async function route() {
+    document.body.classList.remove("authpage");
+  if (location.hash !== "#/account") resetShown = false;
+  const holding = () => /type=recovery|access_token/.test(location.hash) || (resetShown && location.hash === "#/account");
+  if (holding()) return;
     await Promise.all([loadProducts(), loadSettings()]);
+    if (holding()) return;
   if (location.hash && !location.hash.startsWith("#/")) {
     let target = document.getElementById(
       decodeURIComponent(location.hash.slice(1)),
